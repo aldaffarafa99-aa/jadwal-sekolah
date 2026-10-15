@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<!--
+  ============================================================
+  📚 WEB JADWAL PELAJARAN INTERAKTIF
+  Dibuat untuk: Siswa SMK Kelas 11
+  Teknologi: HTML + CSS + JavaScript (Vanilla)
+  ============================================================
+-->
+<html lang="id">
+
+<head>
+  <!-- ✅ Meta tag: pengaturan dasar halaman -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jadwal Pelajaran - XI PPLG 2</title>
+
+  <!-- ✅ Google Fonts: font yang lebih keren dari bawaan browser -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    /* ============================================================
+       🎨 CSS DIMULAI DI SINI
+       CSS dibaca dari atas ke bawah.
+       Kita mulai dari pengaturan global, lalu bagian per bagian.
+    ============================================================ */
+
+    /* --- RESET & GLOBAL --- */
+    /* * artinya "semua elemen". Kita hapus margin & padding bawaan browser */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box; /* Agar ukuran elemen lebih mudah dihitung */
+    }
+
+    /* Mengatur tampilan dasar seluruh halaman */
+    body {
+      font-family: 'Poppins', sans-serif; /* Font dari Google Fonts */
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;   /* vh = viewport height, 100vh = setinggi layar penuh */
+      padding: 20px;
+      color: #ffffff;      /* Warna teks putih */
+    }
+
+    /* ============================================================
+       🏷️ BAGIAN HEADER (Judul di atas)
+    ============================================================ */
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      padding: 30px 20px;
+
+      /* Efek kaca buram (glassmorphism) */
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    /* Ikon di atas judul */
+    .header-icon {
+      font-size: 50px;
+      margin-bottom: 10px;
+    }
+
+    /* Judul utama (h1) */
+    .header h1 {
+      font-size: 2rem;       /* rem = ukuran relatif, lebih fleksibel dari px */
+      font-weight: 700;
+      /* Teks dengan gradasi warna */
+      background: linear-gradient(90deg, #a78bfa, #60a5fa, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+
+    /* Sub-judul */
+    .header p {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.6); /* Putih transparan 60% */
+    }
+
+    /* ============================================================
+       🔘 TOMBOL TAB HARI
+       Tombol untuk memilih hari (Senin, Selasa, dst)
+    ============================================================ */
+    .tab-container {
+      display: flex;           /* Flexbox: susun item secara horizontal */
+      flex-wrap: wrap;         /* Jika tidak muat, pindah ke baris baru */
+      gap: 10px;               /* Jarak antar tombol */
+      justify-content: center; /* Rata tengah */
+      margin-bottom: 25px;
+    }
+
+    /* Gaya dasar setiap tombol tab */
+    .tab-btn {
+      padding: 12px 24px;
+      border: none;            /* Hilangkan border bawaan */
+      border-radius: 50px;     /* Sudut membulat penuh = pil */
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;         /* Ubah kursor menjadi tangan saat hover */
+
+      background: rgba(255, 255, 255, 0.1);
+      color: rgba(255, 255, 255, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+
+      /* Animasi transisi yang halus (durasi 0.3 detik) */
+      transition: all 0.3s ease;
+    }
+
+    /* Efek saat mouse diarahkan ke tombol */
+    .tab-btn:hover {
+      background: rgba(167, 139, 250, 0.3);
+      color: #ffffff;
+      transform: translateY(-2px); /* Geser ke atas 2px = efek "terangkat" */
+    }
+
+    /* Gaya tombol yang sedang AKTIF/dipilih */
+    .tab-btn.active {
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      color: #ffffff;
+      box-shadow: 0 5px 20px rgba(167, 139, 250, 0.4);
+      transform: translateY(-2px);
+    }
+
+    /* ============================================================
+       📋 KARTU KONTEN JADWAL
+    ============================================================ */
+    .schedule-container {
+      max-width: 900px;
+      margin: 0 auto; /* Pusatkan di tengah halaman */
+    }
+
+    /* Setiap panel jadwal (satu per hari) */
+    .schedule-panel {
+      display: none; /* Sembunyikan semua panel secara default */
+
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden; /* Sembunyikan konten yang melebihi border */
+
+      /* Animasi masuk */
+      animation: fadeIn 0.4s ease;
+    }
+
+    /* Tampilkan hanya panel yang punya class "active" */
+    .schedule-panel.active {
+      display: block;
+    }
+
+    /* Animasi fadeIn: dari transparan ke terlihat + gerak ke atas */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;           /* Mulai transparan */
+        transform: translateY(15px); /* Mulai dari bawah */
+      }
+      to {
+        opacity: 1;           /* Akhiri terlihat */
+        transform: translateY(0);    /* Posisi normal */
+      }
+    }
+
+    /* Header dalam setiap panel (nama hari) */
+    .panel-header {
+      padding: 20px 25px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: linear-gradient(135deg, rgba(167, 139, 250, 0.2), rgba(96, 165, 250, 0.2));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .panel-header .day-icon {
+      font-size: 1.8rem;
+    }
+
+    .panel-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .panel-header span {
+      font-size: 0.85rem;
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    /* ============================================================
+       📊 TABEL JADWAL
+    ============================================================ */
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse; /* Hilangkan jarak antar sel tabel */
+    }
+
+    /* Header tabel (baris Jam, Mata Pelajaran, Guru) */
+    .schedule-table thead th {
+      padding: 15px 20px;
+      text-align: left;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;  /* Huruf kapital semua */
+      letter-spacing: 1px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    /* Setiap baris data di tabel */
+    .schedule-table tbody tr {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      transition: background 0.2s ease; /* Transisi halus saat hover */
+    }
+
+    /* Efek hover pada baris tabel */
+    .schedule-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+      cursor: default;
+    }
+
+    /* Baris terakhir, hilangkan garis bawah */
+    .schedule-table tbody tr:last-child {
+      border-bottom: none;
+    }
+
+    /* Setiap sel dalam tabel */
+    .schedule-table tbody td {
+      padding: 16px 20px;
+      vertical-align: middle; /* Teks di tengah secara vertikal */
+    }
+
+    /* Kolom waktu/jam */
+    .time-col {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #a78bfa; /* Warna ungu */
+      white-space: nowrap; /* Jangan potong teks di tengah */
+      min-width: 120px;
+    }
+
+    /* Nama mata pelajaran */
+    .subject-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #ffffff;
+      margin-bottom: 3px;
+    }
+
+    /* Label/badge kategori pelajaran */
+    .subject-badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    /* Warna badge untuk setiap kategori */
+    .badge-sains    { background: rgba(52, 211, 153, 0.2); color: #34d399; }
+    .badge-bahasa   { background: rgba(96, 165, 250, 0.2); color: #60a5fa; }
+    .badge-sosial   { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
+    .badge-teknik   { background: rgba(244, 114, 182, 0.2); color: #f472b6; }
+    .badge-agama    { background: rgba(167, 139, 250, 0.2); color: #a78bfa; }
+    .badge-olahraga { background: rgba(34, 211, 238, 0.2); color: #22d3ee; }
+    .badge-seni     { background: rgba(251, 146, 60, 0.2);  color: #fb923c; }
+    .badge-istirahat{ background: rgba(255,255,255,0.1);     color: rgba(255,255,255,0.5); }
+
+    /* Nama guru */
+    .teacher-col {
+      font-size: 0.88rem;
+      color: rgba(255, 255, 255, 0.65);
+    }
+
+    /* Baris istirahat (tampilan khusus) */
+    .break-row td {
+      background: rgba(255, 255, 255, 0.03);
+      text-align: center;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.85rem;
+      padding: 12px 20px !important;
+    }
+
+    /* ============================================================
+       📊 BAGIAN STATISTIK (ringkasan jumlah pelajaran)
+    ============================================================ */
+    .stats-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 20px;
+      justify-content: center;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 12px 20px;
+      text-align: center;
+      min-width: 100px;
+      transition: transform 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+    }
+
+    .stat-number {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #a78bfa;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin-top: 2px;
+    }
+
+    /* ============================================================
+       🖥️ RESPONSIVE: Tampilan untuk layar kecil (HP)
+       Media query: aturan CSS yang aktif pada kondisi tertentu
+    ============================================================ */
+    @media (max-width: 600px) {
+      .header h1 { font-size: 1.4rem; }
+      .tab-btn   { padding: 9px 16px; font-size: 0.82rem; }
+      .schedule-table thead th,
+      .schedule-table tbody td { padding: 12px 14px; }
+      .teacher-col { display: none; } /* Sembunyikan kolom guru di HP */
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- ============================================================
+       🏷️ HEADER: Judul halaman
+  ============================================================ -->
+  <div class="header">
+    <div class="header-icon">💻</div>
+    <h1>Jadwal Pelajaran Kelas XI PPLG 2</h1>
+    <p>SMK &nbsp;·&nbsp; Pengembangan Perangkat Lunak dan GIM &nbsp;·&nbsp; Tahun Ajaran 2025/2026</p>
+  </div>
+
+  <!-- ============================================================
+       🔘 TAB HARI: Tombol untuk ganti hari
+       onclick="gantiHari('senin')" → memanggil fungsi JavaScript
+  ============================================================ -->
+  <div class="tab-container">
+    <button class="tab-btn active" id="tab-senin"  onclick="gantiHari('senin')">
+      🌅 Senin
+    </button>
+    <button class="tab-btn" id="tab-selasa" onclick="gantiHari('selasa')">
+      ⚡ Selasa
+    </button>
+    <button class="tab-btn" id="tab-rabu"   onclick="gantiHari('rabu')">
+      🌿 Rabu
+    </button>
+    <button class="tab-btn" id="tab-kamis"  onclick="gantiHari('kamis')">
+      🔥 Kamis
+    </button>
+    <button class="tab-btn" id="tab-jumat"  onclick="gantiHari('jumat')">
+      ✨ Jumat
+    </button>
+  </div>
+
+  <!-- ============================================================
+       📋 KONTEN JADWAL: Satu div per hari
+  ============================================================ -->
+  <div class="schedule-container">
+
+    <!-- ===== JADWAL SENIN ===== -->
+    <div class="schedule-panel active" id="panel-senin">
+      <div class="panel-header">
+        <span class="day-icon">🌅</span>
+        <div>
+          <h2>Hari Senin</h2>
+          <span>5 Mata Pelajaran &nbsp;·&nbsp; 06:30 – 15:00</span>
+        </div>
+      </div>
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Jam ke-</th>
+            <th>Mata Pelajaran</th>
+            <th class="teacher-col">Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="break-row">
+            <td colspan="3">🚩 Upacara Bendera / Pembinaan Wali Kelas &nbsp;·&nbsp; 06:30 – 07:10</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 2 – 4</td>
+            <td>
+              <div class="subject-name">Produktif PPLG</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">07:10 – 09:30</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">☕ Istirahat Pertama &nbsp;·&nbsp; 09:30 – 10:00</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 5</td>
+            <td>
+              <div class="subject-name">Produktif PPLG</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">10:00 – 10:40</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 6 – 7</td>
+            <td>
+              <div class="subject-name">PJOK</div>
+              <span class="subject-badge badge-olahraga">Olahraga</span>
+            </td>
+            <td class="teacher-col">10:40 – 12:00</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">🍽️ Istirahat Kedua / ISOMA &nbsp;·&nbsp; 12:00 – 13:00</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 8 – 10</td>
+            <td>
+              <div class="subject-name">Matematika</div>
+              <span class="subject-badge badge-sains">Sains</span>
+            </td>
+            <td class="teacher-col">13:00 – 15:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== JADWAL SELASA ===== -->
+    <div class="schedule-panel" id="panel-selasa">
+      <div class="panel-header">
+        <span class="day-icon">⚡</span>
+        <div>
+          <h2>Hari Selasa</h2>
+          <span>5 Mata Pelajaran &nbsp;·&nbsp; 07:10 – 15:00</span>
+        </div>
+      </div>
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Jam ke-</th>
+            <th>Mata Pelajaran</th>
+            <th class="teacher-col">Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="time-col">Jam 2 – 3</td>
+            <td>
+              <div class="subject-name">Produktif PPLG</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">07:10 – 08:50</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 4 – 5</td>
+            <td>
+              <div class="subject-name">Bisnis Digital</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">08:50 – 10:00</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">☕ Istirahat Pertama &nbsp;·&nbsp; 10:00 – 10:30</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 6 – 7</td>
+            <td>
+              <div class="subject-name">B. Indonesia</div>
+              <span class="subject-badge badge-bahasa">Bahasa</span>
+            </td>
+            <td class="teacher-col">10:30 – 12:00</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">🍽️ Istirahat Kedua / ISOMA &nbsp;·&nbsp; 12:00 – 13:00</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 8</td>
+            <td>
+              <div class="subject-name">B. Indonesia</div>
+              <span class="subject-badge badge-bahasa">Bahasa</span>
+            </td>
+            <td class="teacher-col">13:00 – 13:40</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 9 – 10</td>
+            <td>
+              <div class="subject-name">PPKN</div>
+              <span class="subject-badge badge-sosial">Sosial</span>
+            </td>
+            <td class="teacher-col">13:40 – 15:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== JADWAL RABU ===== -->
+    <div class="schedule-panel" id="panel-rabu">
+      <div class="panel-header">
+        <span class="day-icon">🌿</span>
+        <div>
+          <h2>Hari Rabu</h2>
+          <span>3 Mata Pelajaran &nbsp;·&nbsp; 07:10 – 15:00</span>
+        </div>
+      </div>
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Jam ke-</th>
+            <th>Mata Pelajaran</th>
+            <th class="teacher-col">Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="time-col">Jam 2 – 3</td>
+            <td>
+              <div class="subject-name">Sejarah</div>
+              <span class="subject-badge badge-sosial">Sosial</span>
+            </td>
+            <td class="teacher-col">07:10 – 08:50</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 4</td>
+            <td>
+              <div class="subject-name">B. Inggris</div>
+              <span class="subject-badge badge-bahasa">Bahasa</span>
+            </td>
+            <td class="teacher-col">08:50 – 09:30</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">☕ Istirahat Pertama &nbsp;·&nbsp; 09:30 – 10:00</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 5 – 7</td>
+            <td>
+              <div class="subject-name">B. Inggris</div>
+              <span class="subject-badge badge-bahasa">Bahasa</span>
+            </td>
+            <td class="teacher-col">10:00 – 12:00</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">🍽️ Istirahat Kedua / ISOMA &nbsp;·&nbsp; 12:00 – 13:00</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 8 – 10</td>
+            <td>
+              <div class="subject-name">PAI (Pend. Agama Islam)</div>
+              <span class="subject-badge badge-agama">Agama</span>
+            </td>
+            <td class="teacher-col">13:00 – 15:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== JADWAL KAMIS ===== -->
+    <div class="schedule-panel" id="panel-kamis">
+      <div class="panel-header">
+        <span class="day-icon">🔥</span>
+        <div>
+          <h2>Hari Kamis</h2>
+          <span>1 Mata Pelajaran (Full Day) &nbsp;·&nbsp; 07:10 – 15:00</span>
+        </div>
+      </div>
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Jam ke-</th>
+            <th>Mata Pelajaran</th>
+            <th class="teacher-col">Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="time-col">Jam 2 – 4</td>
+            <td>
+              <div class="subject-name">Produktif PPLG</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">07:10 – 09:30</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">☕ Istirahat Pertama &nbsp;·&nbsp; 09:30 – 10:00</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 5 – 7</td>
+            <td>
+              <div class="subject-name">Produktif PPLG</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">10:00 – 12:00</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">🍽️ Istirahat Kedua / ISOMA &nbsp;·&nbsp; 12:00 – 13:00</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 8 – 10</td>
+            <td>
+              <div class="subject-name">Produktif PPLG</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">13:00 – 15:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ===== JADWAL JUMAT ===== -->
+    <div class="schedule-panel" id="panel-jumat">
+      <div class="panel-header">
+        <span class="day-icon">✨</span>
+        <div>
+          <h2>Hari Jumat</h2>
+          <span>2 Mata Pelajaran &nbsp;·&nbsp; 07:30 – 11:45</span>
+        </div>
+      </div>
+      <table class="schedule-table">
+        <thead>
+          <tr>
+            <th>Jam ke-</th>
+            <th>Mata Pelajaran</th>
+            <th class="teacher-col">Waktu</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="break-row">
+            <td colspan="3">🕌 Penguatan Karakter / Jum'at Taqwa / Jum'at Bersih / Jum'at Sehat &nbsp;·&nbsp; 06:30 – 07:30</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 2</td>
+            <td>
+              <div class="subject-name">Produktif PPLG</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">07:30 – 08:10</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 3 – 4</td>
+            <td>
+              <div class="subject-name">KIK</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">08:10 – 09:30</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">☕ Istirahat Pertama &nbsp;·&nbsp; 09:30 – 09:45</td>
+          </tr>
+          <tr>
+            <td class="time-col">Jam 5 – 7</td>
+            <td>
+              <div class="subject-name">KIK</div>
+              <span class="subject-badge badge-teknik">Produktif</span>
+            </td>
+            <td class="teacher-col">09:45 – 11:45</td>
+          </tr>
+          <tr class="break-row">
+            <td colspan="3">🕌 Istirahat Kedua / Sholat Jumat &nbsp;·&nbsp; 11:45 – 13:00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ============================================================
+         📊 STATISTIK RINGKASAN
+    ============================================================ -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-number">5</div>
+        <div class="stat-label">Hari Sekolah</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">38</div>
+        <div class="stat-label">Total Jam Pelajaran</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">9</div>
+        <div class="stat-label">Mata Pelajaran</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">XI</div>
+        <div class="stat-label">Tingkat Kelas</div>
+      </div>
+    </div>
+
+  </div><!-- end .schedule-container -->
+
+
+  <!-- ============================================================
+       ⚡ JAVASCRIPT: Logika interaktif
+       Script diletakkan di bawah, setelah semua HTML selesai dibaca
+  ============================================================ -->
+  <script>
+    /**
+     * Fungsi gantiHari(hari)
+     * Dipanggil saat tombol tab diklik.
+     * Parameter 'hari' adalah string: 'senin', 'selasa', dst.
+     */
+    function gantiHari(hari) {
+
+      // === LANGKAH 1: Sembunyikan semua panel ===
+      // querySelectorAll() → ambil semua elemen dengan class tertentu
+      // forEach() → lakukan sesuatu pada setiap elemen
+      document.querySelectorAll('.schedule-panel').forEach(function(panel) {
+        panel.classList.remove('active'); // Hapus class 'active'
+      });
+
+      // === LANGKAH 2: Nonaktifkan semua tombol tab ===
+      document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.classList.remove('active');
+      });
+
+      // === LANGKAH 3: Tampilkan panel hari yang dipilih ===
+      // getElementById() → ambil satu elemen berdasarkan id-nya
+      document.getElementById('panel-' + hari).classList.add('active');
+
+      // === LANGKAH 4: Aktifkan tombol hari yang dipilih ===
+      document.getElementById('tab-' + hari).classList.add('active');
+    }
+
+    // ============================================================
+    // FITUR BONUS: Otomatis tampilkan hari ini saat halaman dibuka
+    // ============================================================
+    function tampilkanHariIni() {
+      // new Date().getDay() → angka hari: 0=Minggu, 1=Senin, ..., 6=Sabtu
+      var hariAngka = new Date().getDay();
+
+      // Mapping angka ke nama hari (hanya Senin–Jumat yang ada)
+      var namaHari = {
+        1: 'senin',
+        2: 'selasa',
+        3: 'rabu',
+        4: 'kamis',
+        5: 'jumat'
+      };
+
+      // Jika hari ini ada di jadwal (bukan Sabtu/Minggu), tampilkan
+      if (namaHari[hariAngka]) {
+        gantiHari(namaHari[hariAngka]);
+      }
+      // Jika Sabtu/Minggu, tetap tampilkan Senin (default)
+    }
+
+    // Jalankan fungsi saat halaman pertama kali dibuka
+    tampilkanHariIni();
+  </script>
+
+</body>
+</html>
